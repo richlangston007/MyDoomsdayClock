@@ -27,10 +27,18 @@ int firstDST=1; //use for DST
 
 void setup ()
 {
- 
+  Serial.println("Pressure Sensor Test"); Serial.println("");
+  if(!bmp.begin())
+  {
+    /* There was a problem detecting the BMP085 ... check your connections */
+   Serial.print("Ooops, no BMP085 detected ... Check your wiring or I2C ADDR!");
+    while(1);
+  }
+  displaySensorDetails();
+  
   doom.begin (72);	// 72 ms ~~ 14 Hz
   Serial.begin(9600);
-  while (!Serial) ; // wait until Arduino Serial Monitor opens
+  //while (!Serial) ; // wait until Arduino Serial Monitor opens
   setSyncProvider(RTC.get);   // the function to get the time from the RTC
   if(timeStatus()!= timeSet) 
      Serial.println("Unable to sync with the RTC");
@@ -47,30 +55,14 @@ void setup ()
   Serial.print(year()); 
   Serial.println();     
   doom.setClock (second() , minute(), hour(), day(), month(), year());
-  //
-  //  Set up temp/altitude sensor
-  Serial.println("Pressure Sensor Test"); Serial.println("");
-  
-  /* Initialise the sensor */
 
-  if(!bmp.begin())
-  {
-    /* There was a problem detecting the BMP085 ... check your connections */
-   Serial.print("Ooops, no BMP085 detected ... Check your wiring or I2C ADDR!");
-    while(1);
-  }
-
-  
-  /* Display some basic information on this sensor */
-  displaySensorDetails();
-  
 }
 
 void loop ()
 {
   //Read the brightness from the photo resister
   int sensorValue = analogRead(3);
-//  Serial.println(sensorValue);
+  //Serial.println(sensorValue);
 
   //Get temperature from BMP, but only once per minute because it takes a while
   //and makes the display flash if you do it every time
@@ -86,20 +78,68 @@ void loop ()
 // Automatic Daylight Savings Time 
 //
 // Spring forward
-  if ((hour()==1) & (month()==3) & (minute()==0) & (firstDST)) {  
+  if ((hour()==1) & (month()==3) & (minute()==0) & (second()==0) ) {  
         if (( day()==13) & (year()==2016)) {
-           setTime(2, 0, 0, 13, 3, 2016);   //set the system time to 23h31m30s on 13Feb2009
-           RTC.set(now());
-           firstTime=0;  
+           springForward(1);  
         }
         if (( day()==12) & (year()==2017)) {
-           setTime(2, 0, 0, 12, 3, 2017);   //set the system time to 23h31m30s on 13Feb2009
-           RTC.set(now());
-           firstTime=0;  
+           springForward(1);     
+        }
+        if (( day()==11) & (year()==2018)) {
+           springForward(1);     
+        }
+        if (( day()==10) & (year()==2019)) {
+           springForward(1);     
+        }
+        if (( day()==8) & (year()==2020)) {
+           springForward(1);     
+        } 
+        if (( day()==14) & (year()==2021)) {
+           springForward(1);     
+        }
+        if (( day()==13) & (year()==2022)) {
+           springForward(1);     
+        }
+        if (( day()==12) & (year()==2023)) {
+           springForward(1);     
+        }
+        if (( day()==10) & (year()==2024)) {
+           springForward(1);     
         }
   }
- 
-
+//
+// Fall Back
+  if ((hour()==1) & (month()==11) & (minute()==0) & (second()==0) & (firstDST)) {  
+        if (( day()==6) & (year()==2016)) {
+           fallBack(1);  
+        }
+        if (( day()==5) & (year()==2017)) {
+           fallBack(1);     
+        }
+        if (( day()==4) & (year()==2018)) {
+           fallBack(1);     
+        }
+        if (( day()==3) & (year()==2019)) {
+           fallBack(1);     
+        }
+        if (( day()==1) & (year()==2020)) {
+           fallBack(1);     
+        } 
+        if (( day()==7) & (year()==2021)) {
+           fallBack(1);     
+        }
+        if (( day()==6) & (year()==2022)) {
+           fallBack(1);     
+        }
+        if (( day()==5) & (year()==2023)) {
+           fallBack(1);     
+        }
+        if (( day()==3) & (year()==2024)) {
+           fallBack(1);     
+        }
+  } 
+  if ((hour()==1) & (month()==11) & (minute()==0) & (second()==10) & (firstDST==0))
+        firstDST=1;  
 
   //Not sure if this is needed, but let's sync the doom.Clock to the RTC once a day
   if (( hour() == 3) & ( second() == 0) & (minute()==0)) doom.setClock (second() , minute(), hour(), day(), month(), year()); 
@@ -158,6 +198,15 @@ void displaySensorDetails(void)
   Serial.println("");
   delay(500);
 }
-
-
-
+void springForward(int hours){
+  setTime(hour()+hours,minute(),second(),day(),month(),year());   //set the system time to 23h31m30s on 13Feb2009
+  RTC.set(now()); 
+  doom.setClock (second() , minute(), hour(), day(), month(), year()); 
+}
+//setTime(2, 0, 0, 13, 3, 2016);   //set the system time to 23h31m30s on 13Feb2009//
+void fallBack(int hours){
+  setTime(hour()-hours,minute(),second(),day(),month(),year());   //set the system time to 23h31m30s on 13Feb2009
+  RTC.set(now());
+  firstDST=0;
+  doom.setClock (second() , minute(), hour(), day(), month(), year());  
+}
